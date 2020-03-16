@@ -5,21 +5,23 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import csv
 import numpy as np
-from scipy import pi
 from scipy.fftpack import fft
 import xlrd
 from scipy.signal import find_peaks
 
 #rp_s = scpi.scpi('192.168.128.1')
 
+loc = ("files/wallReadtest.xlsx")
+wb = xlrd.open_workbook(loc)
+sheet = wb.sheet_by_index(0)
+sheet.cell_value(0, 0)
+
+writer = csv.writer(open("files/wallpeak.csv", 'a'))
+
 def getData():
-#94
- for i in range(1):
-    loc = ("files/wallReadtest.xlsx")
-    wb = xlrd.open_workbook(loc)
-    sheet = wb.sheet_by_index(0)
-    sheet.cell_value(0, 0)
-    print(sheet.row_values(i))
+   #94
+   for i in range(94):
+    #print(sheet.row_values(i))
     buff_string=sheet.row_values(i)
     #buff_string = buff_string.split(',')
     buff = list(map(float, buff_string))
@@ -38,7 +40,12 @@ def getData():
     fft_ps = np.abs(fftd_window) ** 2
     power_spec.append(fft_ps)
     peaks, _ = find_peaks(fft_ps, height=0)
-    #print(peaks)
+
+    test = ["wall"]
+
+    writer.writerow(np.append(peaks, test))
+
+    print(peaks)
     plot.plot(fft_ps)
     plot.plot(np.zeros_like(fft_ps), "--", color="gray")
     plot.show()
