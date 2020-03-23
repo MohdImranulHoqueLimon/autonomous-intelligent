@@ -4,7 +4,6 @@ from math import sqrt
 from math import exp
 from math import pi
 
-
 # Load a CSV file
 def load_csv(filename):
     dataset = list()
