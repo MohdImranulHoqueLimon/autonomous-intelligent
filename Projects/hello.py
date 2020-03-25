@@ -27,7 +27,7 @@ def getData():
     plot.ylabel('Voltage')
     plot.show()
 
-    writer = csv.writer(open("human.csv", 'a'))
-    writer.writerow(buff_string)
+    #writer = csv.writer(open("human1.csv", 'a'))
+    #writer.writerow(buff_string)
 
 getData()

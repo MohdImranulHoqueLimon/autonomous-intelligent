@@ -12,7 +12,7 @@ import xlrd
 #rp_s = scpi.scpi('192.168.128.1')
 
 def getData():
-    loc = ("wallRead.xls")
+    loc = ("wallRead1.xls")
 
     wb = xlrd.open_workbook(loc)
     sheet = wb.sheet_by_index(0)

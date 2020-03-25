@@ -3,10 +3,10 @@
 import threading
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
-import csv
 import numpy as np
-from scipy import pi
-from scipy.fftpack import fft
+import csv
+from scipy.signal import find_peaks
+from MergingAllDataSehrish import run_ml_with_live_data,train_system
 
 rp_s = scpi.scpi('192.168.128.1')
 
@@ -29,6 +29,7 @@ def getData():
     rp_s.tx_txt('ACQ:TRIG:LEVEL 100')
     rp_s.tx_txt('ACQ:START')
     rp_s.tx_txt('ACQ:TRIG EXT_PE')
+    rp_s.tx_txt('ACQ:TRIG:DLY 9000')
 
     while 1:
         rp_s.tx_txt('ACQ:TRIG:STAT?')
@@ -40,33 +41,30 @@ def getData():
     buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
     buff = list(map(float, buff_string))
 
-    with open('wall.csv', 'r') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            print(row)
+    filteredList = []
+    for idx, x in enumerate(buff):
+        if idx > 2500:
+            filteredList.append(x)
 
-    #test = np.fft(buff_string)
-    #writer = csv.writer(open("human1.csv", 'a'))
-    #writer.writerow(buff_string)
+    fft_data = []
+    fft_freq = []
+    power_spec = []
+    fftd_window = np.fft.fft(filteredList)
+    fft_data.append(fftd_window)
+    freq = np.fft.fftfreq(np.array(filteredList).shape[-1], d=0.01)
+    fft_freq.append(freq)
+    fft_ps = np.abs(fftd_window) ** 2
+    power_spec.append(fft_ps)
+    peaks, _ = find_peaks(fft_ps, height=0)
 
-    sample_rate = 16384
-    N = (1 - 0) * sample_rate
-    #it was 2 which is 2 second 512
-    time = np.linspace(0, 2, N)
-    frequency = np.linspace(0.0,8192 , int(N / 2))
-    freq_data = fft(buff)
-    y = 2 / N * np.abs(freq_data[0:np.int(N / 2)])
-
-    plot.plot(frequency, y)
-    plot.title('Frequency domain Signal')
-    plot.xlabel('Frequency in Hz')
-    plot.ylabel('Amplitude')
+    plot.plot(buff)
+    plot.ylabel('Voltage')
     plot.show()
+    peakList = list()
+    peakList=peaks.tolist()
+    peakList.sort(reverse=True)
+    slice = peakList[:100]
+    run_ml_with_live_data(trainModel,slice)
 
-
-
-   # plot.plot(buff)
-    #plot.ylabel('Voltage')
-    #plot.show()
-
+trainModel=train_system()
 getData()

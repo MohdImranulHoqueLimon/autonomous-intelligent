@@ -5,7 +5,7 @@ from scipy.misc import electrocardiogram
 from scipy.signal import find_peaks
 
 def fft_transform ():
-    loc = ("humanRead.xls")
+    loc = ("humanRead1.xls")
 
     wb = xlrd.open_workbook(loc)
     sheet = wb.sheet_by_index(0)

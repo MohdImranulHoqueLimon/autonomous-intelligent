@@ -2,15 +2,10 @@ from csv import reader
 from math import sqrt
 from math import exp
 from math import pi
-import matplotlib.pyplot as plot
-import numpy as np
-from scipy.signal import find_peaks
-from peaks import calculate_peak
-import sys
 
-totalTest = 50
+totalTest = 100
 
-def load_csv(filename, allData, objectType):
+def load_csv(filename, allData):
     dataset = list()
     with open(filename, 'r') as file:
         csv_reader = reader(file)
@@ -20,11 +15,22 @@ def load_csv(filename, allData, objectType):
 
             if(len(row) >= totalTest):
                 floatRow = list()
-                for cell in row:
-                    if cell != '':
-                        floatRow.append(float(cell))
+                objectType = -1;
 
+                for cell in row:
+                    if(cell == 'wall'):
+                        objectType = 0
+                        continue
+                    if (cell == 'car'):
+                        objectType = 1
+                        continue
+                    if (cell == 'human'):
+                        objectType = 2
+                        continue
+                    else:
+                        floatRow.append(float(cell))
                 floatRow.sort(reverse = True)
+
                 slice = floatRow[:totalTest]
                 slice.append(objectType)
                 allData.append(slice)
@@ -60,6 +66,7 @@ def summarize_dataset(dataset):
 # Calculate the mean of a list of numbers
 def mean(numbers):
     return sum(numbers) / float(len(numbers))
+
 
 # Calculate the standard deviation of a list of numbers
 def stdev(numbers):
@@ -110,83 +117,61 @@ def str_column_to_float(dataset, column):
     for row in dataset:
         row[column] = float(row[column].strip())
 
+def run_ml_with_live_data(model,testrow):
+ #wallFilename = 'ml/wallpeak.csv'
+ #humanFilename = 'ml/humanpeak.csv'
+ #carFilename = 'ml/carpeak.csv'
+ #trainignData = list()
+ #test= list()
 
-wallFilename = 'ml/wall.csv'
-humanFilename = 'ml/human.csv'
+ #trainignData = load_csv(wallFilename, trainignData)
+ #trainignData = load_csv(humanFilename, trainignData)
+ #trainignData = load_csv(carFilename, trainignData)
+ #print(trainignData)
+ #test=trainignData.pop(100)
+ #test=test[0:totalTest]
+# fit model
+ #model = summarize_by_class(trainignData)
+# predict the label
+ label = predict(model, testrow)#testrow
+ #print('Data=%s, Predicted: %s' % (testrow, label))
+ print('Predicted: %s' % (label))
+
+
+def train_system():
+    wallFilename = 'ml/wallpeak.csv'
+    humanFilename = 'ml/humanpeak.csv'
+    carFilename = 'ml/carpeak.csv'
+    trainignData = list()
+    test = list()
+
+    trainignData = load_csv(wallFilename, trainignData)
+    trainignData = load_csv(humanFilename, trainignData)
+    trainignData = load_csv(carFilename, trainignData)
+    # print(trainignData)
+    test = trainignData.pop(100)
+    test = test[0:totalTest]
+    # fit model
+    model = summarize_by_class(trainignData)
+    return model
+
+wallFilename = 'ml/wallpeak.csv'
+wallTestFilename = 'ml/wallpeaktest.csv'
+humanFilename = 'ml/humanpeak.csv'
+carFilename = 'ml/carpeak1.csv'
 trainignData = list()
 test= list()
 
-trainignData = load_csv(wallFilename, trainignData, 0)
-trainignData = load_csv(humanFilename, trainignData, 1)
-#trainignData = load_csv(carFilename, trainignData)
+trainignData = load_csv(wallFilename, trainignData)
+trainignData = load_csv(humanFilename, trainignData)
+trainignData = load_csv(carFilename, trainignData)
+print(trainignData)
+test=trainignData.pop(100)
+load_csv(wallTestFilename,)
+test=test[0:totalTest]
 # fit model
 model = summarize_by_class(trainignData)
-
-testingCarData = list()
-testingHumanData = list()
-testingWallData = list()
-
-#testingCarData = load_csv('files/carpeaktest.csv', testingCarData)
-#testingHumanData = load_csv('files/humanpeaktest.csv', testingHumanData)
-#testingWallData = load_csv('files/wallpeaktest.csv', testingWallData)
-
-
-def printLabel(label):
-    if label == 0:
-        print('Wall')
-    if label == 1:
-        print('Human')
-
-import threading
-import redpitaya_scpi as scpi
-rp_s = scpi.scpi('192.168.128.1')
-
-def getData():
-    try:
-        threading.Timer(3, getData).start()
-        wave_form = 'sine'
-        freq = 10000
-        ampl = 2
-
-        rp_s.tx_txt('GEN:RST')
-        rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
-        rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
-        rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
-        rp_s.tx_txt('SOUR1:BURS:NCYC 2')
-        rp_s.tx_txt('OUTPUT1:STATE ON')
-        rp_s.tx_txt('SOUR1:BURS:STAT ON')
-        rp_s.tx_txt('SOUR1:TRIG:SOUR EXT_PE')
-
-        rp_s.tx_txt('ACQ:DEC 64')
-        rp_s.tx_txt('ACQ:TRIG:LEVEL 100')
-        rp_s.tx_txt('ACQ:START')
-        rp_s.tx_txt('ACQ:TRIG EXT_PE')
-        rp_s.tx_txt('ACQ:TRIG:DLY 9000')
-
-        while 1:
-            rp_s.tx_txt('ACQ:TRIG:STAT?')
-            if rp_s.rx_txt() == 'TD':
-                break
-
-        rp_s.tx_txt('ACQ:SOUR1:DATA?')
-        buff_string = rp_s.rx_txt()
-        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-        buff = list(map(float, buff_string))
-
-        peaks = calculate_peak(buff)
-
-        plot.plot(buff)
-        plot.ylabel('Voltage')
-        plot.show()
-        peakList = list()
-        peakList = peaks.tolist()
-        peakList.sort(reverse=True)
-        slice = peakList[:totalTest]
-        label = predict(model, slice)
-        printLabel(label)
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        raise
-
-getData()
-
+# predict the label
+label = predict(model, test)#testrow
+print('Data=%s, Predicted: %s' % (test, label))
+print('Predicted: %s' % (label))

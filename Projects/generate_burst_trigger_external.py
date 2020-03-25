@@ -26,6 +26,8 @@ def getData():
     rp_s.tx_txt('ACQ:START')
     rp_s.tx_txt('ACQ:TRIG EXT_PE')
 
+
+
     while 1:
         rp_s.tx_txt('ACQ:TRIG:STAT?')
         if rp_s.rx_txt() == 'TD':
