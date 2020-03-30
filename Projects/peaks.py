@@ -19,8 +19,4 @@ def calculate_peak(buff):
     power_spec.append(fft_ps)
     peaks, _ = find_peaks(fft_ps, height=0)
 
-    plt.plot(fft_ps)
-    plt.plot(np.zeros_like(fft_ps), "--", color="gray")
-    plt.show()
-
-    return peaks
+    return _

@@ -3,32 +3,28 @@ from math import sqrt
 from math import exp
 from math import pi
 import matplotlib.pyplot as plot
-import numpy as np
-from scipy.signal import find_peaks
 from peaks import calculate_peak
 import sys
+import threading
+import redpitaya_scpi as scpi
 
 totalTest = 50
 
-def load_csv(filename, allData, objectType):
+def printLabel(label):
+    if label == 0.0:
+        print('Wall')
+    if label == 1.0:
+        print('Human')
+
+def load_csv(filename, allData):
     dataset = list()
     with open(filename, 'r') as file:
         csv_reader = reader(file)
         for row in csv_reader:
             if not row:
                 continue
-
-            if(len(row) >= totalTest):
-                floatRow = list()
-                for cell in row:
-                    if cell != '':
-                        floatRow.append(float(cell))
-
-                floatRow.sort(reverse = True)
-                slice = floatRow[:totalTest]
-                slice.append(objectType)
-                allData.append(slice)
-
+            row = list(map(float, row))
+            allData.append(row)
     return allData
 
 # Convert string column to integer
@@ -111,38 +107,17 @@ def str_column_to_float(dataset, column):
         row[column] = float(row[column].strip())
 
 
-wallFilename = 'ml/wall.csv'
-humanFilename = 'ml/human.csv'
+featuresData = 'ml/features.csv'
 trainignData = list()
-test= list()
+trainignData = load_csv(featuresData, trainignData)
 
-trainignData = load_csv(wallFilename, trainignData, 0)
-trainignData = load_csv(humanFilename, trainignData, 1)
-#trainignData = load_csv(carFilename, trainignData)
 # fit model
 model = summarize_by_class(trainignData)
 
-testingCarData = list()
-testingHumanData = list()
-testingWallData = list()
-
-#testingCarData = load_csv('files/carpeaktest.csv', testingCarData)
-#testingHumanData = load_csv('files/humanpeaktest.csv', testingHumanData)
-#testingWallData = load_csv('files/wallpeaktest.csv', testingWallData)
-
-
-def printLabel(label):
-    if label == 0:
-        print('Wall')
-    if label == 1:
-        print('Human')
-
-import threading
-import redpitaya_scpi as scpi
-rp_s = scpi.scpi('192.168.128.1')
-
 def getData():
     try:
+        rp_s = scpi.scpi('192.168.128.1')
+
         threading.Timer(3, getData).start()
         wave_form = 'sine'
         freq = 10000
@@ -178,11 +153,11 @@ def getData():
         plot.plot(buff)
         plot.ylabel('Voltage')
         plot.show()
-        peakList = list()
-        peakList = peaks.tolist()
-        peakList.sort(reverse=True)
-        slice = peakList[:totalTest]
-        label = predict(model, slice)
+
+        test = peaks.get('peak_heights')
+        incomingData = [test.min(), test.max()]
+
+        label = predict(model, incomingData)
         printLabel(label)
     except:
         print("Unexpected error:", sys.exc_info()[0])

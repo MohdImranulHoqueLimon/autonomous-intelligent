@@ -5,11 +5,11 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import csv
 from peaks import calculate_peak
-
+import numpy as np
 rp_s = scpi.scpi('192.168.128.1')
 
 def getData():
-    try:
+    #try:
         threading.Timer(3, getData).start()
         wave_form = 'sine'
         freq = 10000
@@ -40,14 +40,18 @@ def getData():
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = list(map(float, buff_string))
         peaks = calculate_peak(buff)
-        writer = csv.writer(open("ml/human.csv", 'a'))
-        writer.writerow(peaks)
 
-        plot.plot(buff)
-        plot.ylabel('Voltage')
-        plot.show()
-    except:
-        print("An exception occurred")
+        test = peaks.get('peak_heights')
+        row = {test.min(), test.max()}
+
+        #writer = csv.writer(open("ml/wall.csv", 'a'))
+        #writer.writerow(row)
+
+        #plot.plot(buff)
+        #plot.ylabel('Voltage')
+        #plot.show()
+    #except:
+        #print("An exception occurred")
 
 
 getData()
