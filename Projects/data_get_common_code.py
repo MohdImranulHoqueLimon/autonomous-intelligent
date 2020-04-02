@@ -1,25 +1,10 @@
-import paramiko
+import ssh_connection
 import threading
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import csv
 from peaks import calculate_peak
 import numpy as np
-
-try:
-    REDPITAYA_HOST_IP = "192.168.128.1"
-    userName = "root"
-    password = "root"
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    #test = ssh.connect(REDPITAYA_HOST_IP, username=userName, password=password)
-    #stdin, stdout, stderr = ssh.exec_command("ls -a")
-    #lines = stdout.readlines()
-    #print(lines)
-except:
-    print("An exception occurred")
-
-a = 12313
 
 rp_s = scpi.scpi('192.168.128.1')
 def getData():
@@ -60,7 +45,6 @@ def getData():
 
         writer = csv.writer(open("ml/wall.csv", 'a'))
         writer.writerow(buff)
-        print(buff)
         plot.plot(buff)
         plot.ylabel('Voltage')
         plot.show()
