@@ -118,7 +118,7 @@ def getData():
     try:
         rp_s = scpi.scpi('192.168.128.1')
 
-        threading.Timer(3, getData).start()
+        threading.Timer(3000, getData).start()
         wave_form = 'sine'
         freq = 10000
         ampl = 2

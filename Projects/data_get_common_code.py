@@ -1,15 +1,29 @@
-#!/usr/bin/python
-
+import paramiko
 import threading
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import csv
 from peaks import calculate_peak
 import numpy as np
-rp_s = scpi.scpi('192.168.128.1')
 
+try:
+    REDPITAYA_HOST_IP = "192.168.128.1"
+    userName = "root"
+    password = "root"
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    #test = ssh.connect(REDPITAYA_HOST_IP, username=userName, password=password)
+    #stdin, stdout, stderr = ssh.exec_command("ls -a")
+    #lines = stdout.readlines()
+    #print(lines)
+except:
+    print("An exception occurred")
+
+a = 12313
+
+rp_s = scpi.scpi('192.168.128.1')
 def getData():
-    #try:
+    try:
         threading.Timer(3, getData).start()
         wave_form = 'sine'
         freq = 10000
@@ -39,19 +53,19 @@ def getData():
         buff_string = rp_s.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = list(map(float, buff_string))
-        peaks = calculate_peak(buff)
 
-        test = peaks.get('peak_heights')
-        row = {test.min(), test.max()}
+        #peaks = calculate_peak(buff)
+        #test = peaks.get('peak_heights')
+        #row = {test.min(), test.max()}
 
-        #writer = csv.writer(open("ml/wall.csv", 'a'))
-        #writer.writerow(row)
-
-        #plot.plot(buff)
-        #plot.ylabel('Voltage')
-        #plot.show()
-    #except:
-        #print("An exception occurred")
+        writer = csv.writer(open("ml/wall.csv", 'a'))
+        writer.writerow(buff)
+        print(buff)
+        plot.plot(buff)
+        plot.ylabel('Voltage')
+        plot.show()
+    except:
+        print("An exception occurred")
 
 
 getData()

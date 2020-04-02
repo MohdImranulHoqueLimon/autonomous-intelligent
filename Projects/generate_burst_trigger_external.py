@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
-import threading
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 
 rp_s = scpi.scpi('192.168.128.1')
 
-def getData():
-    threading.Timer(3, getData).start()
+def test():
+
     wave_form = 'sine'
     freq = 10000
     ampl = 2
@@ -26,8 +25,6 @@ def getData():
     rp_s.tx_txt('ACQ:START')
     rp_s.tx_txt('ACQ:TRIG EXT_PE')
 
-
-
     while 1:
         rp_s.tx_txt('ACQ:TRIG:STAT?')
         if rp_s.rx_txt() == 'TD':
@@ -42,4 +39,4 @@ def getData():
     plot.ylabel('Voltage')
     plot.show()
 
-getData()
+test()
