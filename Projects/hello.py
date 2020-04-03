@@ -5,29 +5,26 @@ import threading
 import csv
 import collections
 
-rp_s = scpi.scpi('192.168.128.1')
+from gtts import gTTS
 
-def getData():
-    threading.Timer(3, getData).start()
+# This module is imported so that we can
+# play the converted audio
+import os
 
-    rp_s.tx_txt('ACQ:START')
-    #rp_s.tx_txt('ACQ:TRIG NOW')
-    rp_s.tx_txt('SOUR1:TRIG:SOUR DIO0_P')
-    while 1:
-        rp_s.tx_txt('ACQ:TRIG:STAT?')
-        if rp_s.rx_txt() == 'TD':
-            break
+# The text that you want to convert to audio
+mytext = 'Car'
 
-    rp_s.tx_txt('ACQ:SOUR1:DATA?')
-    buff_string = rp_s.rx_txt()
-    print(buff_string)
-    buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-    buff = list(map(float, buff_string))
-    plot.plot(buff)
-    plot.ylabel('Voltage')
-    plot.show()
+# Language in which you want to convert
+language = 'en'
 
-    #writer = csv.writer(open("human1.csv", 'a'))
-    #writer.writerow(buff_string)
+# Passing the text and language to the engine,
+# here we have marked slow=False. Which tells
+# the module that the converted audio should
+# have a high speed
+#myobj = gTTS(text=mytext, lang=language, slow=False)
+# Saving the converted audio in a mp3 file named
+# welcome
+#myobj.save("car.mp3")
 
-getData()
+# Playing the converted file
+os.system("car.mp3")

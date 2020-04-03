@@ -7,14 +7,17 @@ from peaks import calculate_peak
 import sys
 import threading
 import redpitaya_scpi as scpi
+import os
 
 totalTest = 50
 
 def printLabel(label):
-    if label == 0.0:
-        print('Wall')
     if label == 1.0:
+        print('Wall')
+        os.system("wall.mp3")
+    if label == 2.0:
         print('Human')
+        os.system("human.mp3")
 
 def load_csv(filename, allData):
     dataset = list()
@@ -118,7 +121,7 @@ def getData():
     try:
         rp_s = scpi.scpi('192.168.128.1')
 
-        threading.Timer(3000, getData).start()
+        threading.Timer(6, getData).start()
         wave_form = 'sine'
         freq = 10000
         ampl = 2
@@ -155,7 +158,7 @@ def getData():
         plot.show()
 
         test = peaks.get('peak_heights')
-        incomingData = [test.min(), test.max()]
+        incomingData = [test.min(), test.max(),test.shape[0]]
 
         label = predict(model, incomingData)
         printLabel(label)

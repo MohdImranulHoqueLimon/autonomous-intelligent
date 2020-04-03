@@ -1,4 +1,4 @@
-import ssh_connection
+
 import threading
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
@@ -43,7 +43,7 @@ def getData():
         #test = peaks.get('peak_heights')
         #row = {test.min(), test.max()}
 
-        writer = csv.writer(open("ml/wall.csv", 'a'))
+        writer = csv.writer(open("ml/human.csv", 'a'))
         writer.writerow(buff)
         plot.plot(buff)
         plot.ylabel('Voltage')
