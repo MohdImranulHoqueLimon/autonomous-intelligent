@@ -8,8 +8,22 @@ import sys
 import threading
 import redpitaya_scpi as scpi
 import os
+import paramiko
+
 
 totalTest = 50
+def ssh_connection():
+    try:
+        REDPITAYA_HOST_IP = "192.168.128.1"
+        userName = "root"
+        password = "root"
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        test = ssh.connect(REDPITAYA_HOST_IP, username=userName, password=password)
+        stdin, stdout, stderr = ssh.exec_command("ls -a")
+        #lines = stdout.readlines()
+    except:
+        print("An exception occurred")
 
 def printLabel(label):
     if label == 1.0:
@@ -18,6 +32,9 @@ def printLabel(label):
     if label == 2.0:
         print('Human')
         os.system("human.mp3")
+    if label == 3.0:
+        print('car')
+        os.system("car.mp3")
 
 def load_csv(filename, allData):
     dataset = list()
@@ -109,6 +126,8 @@ def str_column_to_float(dataset, column):
     for row in dataset:
         row[column] = float(row[column].strip())
 
+
+ssh_connection()
 
 featuresData = 'ml/features.csv'
 trainignData = list()
