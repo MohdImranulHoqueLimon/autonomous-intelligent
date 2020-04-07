@@ -5,7 +5,8 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import csv
 import numpy as np
-from scipy.fftpack import fft
+#from scipy.fftpack import fft
+from numpy.fft import fft
 import xlrd
 from scipy.signal import find_peaks
 
@@ -46,9 +47,9 @@ def getData():
 
     test = ["car"]
 
-    writer.writerow(np.append(peaks, test))
+    #writer.writerow(np.append(peaks, test))
 
-    print(peaks)
+    #print(peaks)
     plot.plot(fft_ps)
     plot.plot(np.zeros_like(fft_ps), "--", color="gray")
     plot.show()

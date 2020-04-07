@@ -85,7 +85,7 @@ class scpi (object):
         """Clear Status Command"""
         return self.tx_txt('*CLS')
 
-    def ese(self, value: int):
+    def ese(self, value):
         """Standard Event Status Enable Command"""
         return self.tx_txt('*ESE {}'.format(value))
 

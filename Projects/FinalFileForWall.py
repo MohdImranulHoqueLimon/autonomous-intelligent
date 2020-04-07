@@ -5,7 +5,8 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import csv
 import numpy as np
-from scipy.fftpack import fft
+#from scipy.fftpack import fft
+from numpy.fft import fft
 import xlrd
 from scipy.signal import find_peaks
 

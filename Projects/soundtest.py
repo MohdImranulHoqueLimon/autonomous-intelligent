@@ -2,14 +2,33 @@ from csv import reader
 from math import sqrt
 from math import exp
 from math import pi
-import matplotlib.pyplot as plot
+#import matplotlib.pyplot as plot
 from peaks import calculate_peak
 import sys
 import threading
 import redpitaya_scpi as scpi
 import os
-#import paramiko
+import pygame
+import paramiko
+#from pexpect import pxssh
 
+
+ssh_connect = 0
+
+def ssh_test():
+    s = pxssh.pxssh()
+    if not s.login ('192.168.128.1', 'root', 'root'):
+        print ("SSH session failed on login.")
+        #print str(s)
+    else:
+        print ("SSH session login successful")
+        global ssh_connect
+        ssh_connect = 1
+        s.sendline ('ls -l')
+        s.prompt()         # match the prompt
+        #print s.before     # print everything before the prompt.
+        s.logout()
+    return s
 
 totalTest = 50
 def ssh_connection():
@@ -21,6 +40,8 @@ def ssh_connection():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         test = ssh.connect(REDPITAYA_HOST_IP, username=userName, password=password)
         stdin, stdout, stderr = ssh.exec_command("ls -a")
+        global ssh_connect
+        ssh_connect = 1
         #lines = stdout.readlines()
     except:
         print("An exception occurred")
@@ -28,13 +49,23 @@ def ssh_connection():
 def printLabel(label):
     if label == 1.0:
         print('Wall')
-        os.system("wall.mp3")
+        playMusic("/home/pi/wall.mp3")
     if label == 2.0:
         print('Human')
-        os.system("human.mp3")
+        playMusic("/home/pi/human.mp3")
     if label == 3.0:
         print('car')
-        os.system("car.mp3")
+        playMusic("/home/pi/car.mp3")
+
+def playMusic(path):
+    try:
+        pygame.mixer.init()
+        pygame.mixer.music.load(path)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy() == True:
+            continue
+    except:
+        print("An exception occurred")
 
 def load_csv(filename, allData):
     dataset = list()
@@ -126,9 +157,6 @@ def str_column_to_float(dataset, column):
     for row in dataset:
         row[column] = float(row[column].strip())
 
-
-#ssh_connection()
-
 featuresData = 'ml/features.csv'
 trainignData = list()
 trainignData = load_csv(featuresData, trainignData)
@@ -136,54 +164,61 @@ trainignData = load_csv(featuresData, trainignData)
 # fit model
 model = summarize_by_class(trainignData)
 
+
+
+#ssh_test()
+ssh_connection()
+
 def getData():
     try:
-        rp_s = scpi.scpi('192.168.128.1')
+        print(ssh_connect)
+        if ssh_connect == 0:
+            ssh_connection()
+        else:
+            rp_s = scpi.scpi('192.168.128.1')
+            threading.Timer(6, getData).start()
+            wave_form = 'sine'
+            freq = 10000
+            ampl = 2
 
-        threading.Timer(6, getData).start()
-        wave_form = 'sine'
-        freq = 10000
-        ampl = 2
+            rp_s.tx_txt('GEN:RST')
+            rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
+            rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
+            rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
+            rp_s.tx_txt('SOUR1:BURS:NCYC 2')
+            rp_s.tx_txt('OUTPUT1:STATE ON')
+            rp_s.tx_txt('SOUR1:BURS:STAT ON')
+            rp_s.tx_txt('SOUR1:TRIG:SOUR EXT_PE')
 
-        rp_s.tx_txt('GEN:RST')
-        rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
-        rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
-        rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
-        rp_s.tx_txt('SOUR1:BURS:NCYC 2')
-        rp_s.tx_txt('OUTPUT1:STATE ON')
-        rp_s.tx_txt('SOUR1:BURS:STAT ON')
-        rp_s.tx_txt('SOUR1:TRIG:SOUR EXT_PE')
+            rp_s.tx_txt('ACQ:DEC 64')
+            rp_s.tx_txt('ACQ:TRIG:LEVEL 100')
+            rp_s.tx_txt('ACQ:START')
+            rp_s.tx_txt('ACQ:TRIG EXT_PE')
+            rp_s.tx_txt('ACQ:TRIG:DLY 9000')
 
-        rp_s.tx_txt('ACQ:DEC 64')
-        rp_s.tx_txt('ACQ:TRIG:LEVEL 100')
-        rp_s.tx_txt('ACQ:START')
-        rp_s.tx_txt('ACQ:TRIG EXT_PE')
-        rp_s.tx_txt('ACQ:TRIG:DLY 9000')
+            while 1:
+                rp_s.tx_txt('ACQ:TRIG:STAT?')
+                if rp_s.rx_txt() == 'TD':
+                    break
 
-        while 1:
-            rp_s.tx_txt('ACQ:TRIG:STAT?')
-            if rp_s.rx_txt() == 'TD':
-                break
+            rp_s.tx_txt('ACQ:SOUR1:DATA?')
+            buff_string = rp_s.rx_txt()
+            buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+            buff = list(map(float, buff_string))
 
-        rp_s.tx_txt('ACQ:SOUR1:DATA?')
-        buff_string = rp_s.rx_txt()
-        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-        buff = list(map(float, buff_string))
+            peaks = calculate_peak(buff)
 
-        peaks = calculate_peak(buff)
+            #plot.plot(buff)
+            #plot.ylabel('Voltage')
+            #plot.show()
 
-        plot.plot(buff)
-        plot.ylabel('Voltage')
-        plot.show()
+            test = peaks.get('peak_heights')
+            incomingData = [test.min(), test.max(),test.shape[0]]
 
-        test = peaks.get('peak_heights')
-        incomingData = [test.min(), test.max(),test.shape[0]]
-
-        label = predict(model, incomingData)
-        printLabel(label)
+            label = predict(model, incomingData)
+            printLabel(label)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
 getData()
-
