@@ -16,6 +16,7 @@ import time
 
 ssh_connect = 0
 
+
 def ssh_test():
     s = pxssh.pxssh()
     if not s.login ('192.168.128.1', 'root', 'root'):
@@ -33,19 +34,21 @@ def ssh_test():
 
 totalTest = 50
 def ssh_connection():
+    global ssh_connect
     try:
         REDPITAYA_HOST_IP = "192.168.128.1"
         userName = "root"
         password = "root"
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        print("try to coonect")
         test = ssh.connect(REDPITAYA_HOST_IP, username=userName, password=password)
         stdin, stdout, stderr = ssh.exec_command("ls -a")
-        global ssh_connect
         ssh_connect = 1
         #lines = stdout.readlines()
     except:
-        print("An exception occurred")
+        ssh_connect = 0
+        print("2 SSH failure An exception occurred")
 
 def printLabel(label):
     if label == 1.0:
@@ -66,7 +69,7 @@ def playMusic(path):
         while pygame.mixer.music.get_busy() == True:
             continue
     except:
-        print("An exception occurred")
+        print("3 An exception occurred")
 
 def load_csv(filename, allData):
     dataset = list()
@@ -80,7 +83,7 @@ def load_csv(filename, allData):
                 allData.append(row)
         return allData
     except:
-        print("An exception occurred")
+        print("4 An exception occurred")
 
 # Convert string column to integer
 def str_column_to_int(dataset, column):
@@ -161,8 +164,13 @@ def str_column_to_float(dataset, column):
     for row in dataset:
         row[column] = float(row[column].strip())
 
-time.sleep(30)
+
+time.sleep(40)
 featuresData = 'ml/features.csv'
+print(os.path.exists(featuresData))
+while (os.path.exists(featuresData) == False):
+    time.sleep(5)
+
 trainignData = list()
 trainignData = load_csv(featuresData, trainignData)
 
@@ -174,10 +182,11 @@ model = summarize_by_class(trainignData)
 ssh_connection()
 
 def getData():
+    global ssh_connect
     try:
-        print(ssh_connect)
         if ssh_connect == 0:
             ssh_connection()
+            threading.Timer(5, getData).start()
         else:
             rp_s = scpi.scpi('192.168.128.1')
             threading.Timer(6, getData).start()
@@ -222,7 +231,9 @@ def getData():
             label = predict(model, incomingData)
             printLabel(label)
     except:
-        print("Unexpected error:", sys.exc_info()[0])
-        raise
+        print("1 Unexpected error:", sys.exc_info()[0])
+        ssh_connect = 0
+        time.sleep(5)
+        #raise
 
 getData()
