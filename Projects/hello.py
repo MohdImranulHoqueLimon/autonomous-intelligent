@@ -12,10 +12,10 @@ from gtts import gTTS
 import os
 
 # The text that you want to convert to audio
-mytext = 'Car'
+#mytext = 'Car'
 
 # Language in which you want to convert
-language = 'en'
+#language = 'en'
 
 # Passing the text and language to the engine,
 # here we have marked slow=False. Which tells

@@ -7,5 +7,5 @@ root
 
 Resberry Pie
 ___________________________
-  <
+Limon pc hotstop remote connection 192.168.137.150
 

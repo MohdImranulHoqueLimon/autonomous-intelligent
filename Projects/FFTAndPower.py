@@ -6,14 +6,11 @@ from scipy.signal import find_peaks
 from peaks import calculate_peak
 import csv
 
-
 loc = ("files/Car_Data.xlsx")
 wb = xlrd.open_workbook(loc)
 sheet = wb.sheet_by_index(0)
 sheet.cell_value(0, 0)
 sheet = wb.sheet_by_index(0)
-
-
 
 def fft_transform ():
     for col in range(sheet.ncols):
@@ -24,11 +21,13 @@ def fft_transform ():
          #plt.ylabel('Voltage')
          #plt.show()
          buff = list(map(float, window))
+         mean = np.mean(buff)
+         variance = np.var(buff)
          peaks = calculate_peak(buff)
          test = peaks.get('peak_heights')
          min = test.min()
-         rowtest = [test.min(), test.max(), test.shape[0]]
-         # 3 for wall
+         rowtest = [test.min(), test.max(), test.shape[0], mean, variance]
+         # 3 for car
          test = [3]
          writer = csv.writer(open("ml/features.csv", 'a'))
          writer.writerow(np.append(rowtest, test))
