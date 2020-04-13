@@ -43,7 +43,7 @@ def getData():
         #test = peaks.get('peak_heights')
         #row = {test.min(), test.max()}
 
-        writer = csv.writer(open("ml/human.csv", 'a'))
+        writer = csv.writer(open("ml/car.csv", 'a'))
         writer.writerow(buff)
         plot.plot(buff)
         plot.ylabel('Voltage')
