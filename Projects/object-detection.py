@@ -2,37 +2,40 @@ from csv import reader
 from math import sqrt
 from math import exp
 from math import pi
-#import matplotlib.pyplot as plot
+import matplotlib.pyplot as plot
 from peaks import calculate_peak
 import sys
 import threading
 import redpitaya_scpi as scpi
 import os
-import pygame
+#import pygame
 import paramiko
 import time
-#from pexpect import pxssh
+import numpy as np
+
+# from pexpect import pxssh
 
 
 ssh_connect = 0
 
-
-def ssh_test():
-    s = pxssh.pxssh()
-    if not s.login ('192.168.128.1', 'root', 'root'):
-        print ("SSH session failed on login.")
-        #print str(s)
-    else:
-        print ("SSH session login successful")
-        global ssh_connect
-        ssh_connect = 1
-        s.sendline ('ls -l')
-        s.prompt()         # match the prompt
-        #print s.before     # print everything before the prompt.
-        s.logout()
-    return s
+# def ssh_test():
+# s = pxssh.pxssh()
+# if not s.login ('192.168.128.1', 'root', 'root'):
+# print ("SSH session failed on login.")
+# print str(s)
+# else:
+# print ("SSH session login successful")
+# global ssh_connect
+# ssh_connect = 1
+# s.sendline ('ls -l')
+# s.prompt()         # match the prompt
+# print s.before     # print everything before the prompt.
+# s.logout()
+# return s
 
 totalTest = 50
+
+
 def ssh_connection():
     global ssh_connect
     try:
@@ -45,31 +48,35 @@ def ssh_connection():
         test = ssh.connect(REDPITAYA_HOST_IP, username=userName, password=password)
         stdin, stdout, stderr = ssh.exec_command("ls -a")
         ssh_connect = 1
-        #lines = stdout.readlines()
+        # lines = stdout.readlines()
     except:
         ssh_connect = 0
         print("2 SSH failure An exception occurred")
 
+
 def printLabel(label):
     if label == 1.0:
         print('Wall')
-        playMusic("/home/pi/autonomous-intelligent/Projects/wall.mp3")
+        #playMusic("/home/pi/autonomous-intelligent/Projects/wall.mp3")
     if label == 2.0:
         print('Human')
-        playMusic("/home/pi/autonomous-intelligent/Projects/human.mp3")
+        #playMusic("/home/pi/autonomous-intelligent/Projects/human.mp3")
     if label == 3.0:
         print('car')
-        playMusic("/home/pi/autonomous-intelligent/Projects/car.mp3")
+        #playMusic("/home/pi/autonomous-intelligent/Projects/car.mp3")
+
 
 def playMusic(path):
     try:
-        pygame.mixer.init()
-        pygame.mixer.music.load(path)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy() == True:
-            continue
+        a = 0
+        #pygame.mixer.init()
+        #pygame.mixer.music.load(path)
+        #pygame.mixer.music.play()
+        #while pygame.mixer.music.get_busy() == True:
+            #continue
     except:
         print("3 An exception occurred")
+
 
 def load_csv(filename, allData):
     dataset = list()
@@ -85,6 +92,7 @@ def load_csv(filename, allData):
     except:
         print("4 An exception occurred")
 
+
 # Convert string column to integer
 def str_column_to_int(dataset, column):
     class_values = [row[column] for row in dataset]
@@ -97,6 +105,7 @@ def str_column_to_int(dataset, column):
         row[column] = lookup[row[column]]
     return lookup
 
+
 # Split dataset by class then calculate statistics for each row
 def summarize_by_class(dataset):
     separated = separate_by_class(dataset)
@@ -105,21 +114,25 @@ def summarize_by_class(dataset):
         summaries[class_value] = summarize_dataset(rows)
     return summaries
 
+
 # Calculate the mean, stdev and count for each column in a dataset
 def summarize_dataset(dataset):
     summaries = [(mean(column), stdev(column), len(column)) for column in zip(*dataset)]
     del (summaries[-1])
     return summaries
 
+
 # Calculate the mean of a list of numbers
 def mean(numbers):
     return sum(numbers) / float(len(numbers))
+
 
 # Calculate the standard deviation of a list of numbers
 def stdev(numbers):
     avg = mean(numbers)
     variance = sum([(x - avg) ** 2 for x in numbers]) / float(len(numbers) - 1)
     return sqrt(variance)
+
 
 # Split the dataset by class values, returns a dictionary
 def separate_by_class(dataset):
@@ -132,6 +145,7 @@ def separate_by_class(dataset):
         separated[class_value].append(vector)
     return separated
 
+
 # Calculate the probabilities of predicting each class for a given row
 def calculate_class_probabilities(summaries, row):
     total_rows = sum([summaries[label][0][2] for label in summaries])
@@ -142,6 +156,7 @@ def calculate_class_probabilities(summaries, row):
             mean, stdev, _ = class_summaries[i]
             probabilities[class_value] *= calculate_probability(row[i], mean, stdev)
     return probabilities
+
 
 # Calculate the Gaussian probability distribution function for x
 def calculate_probability(x, mean, stdev):
@@ -159,6 +174,7 @@ def predict(summaries, row):
             best_label = class_value
     return best_label
 
+
 # Convert string column to float
 def str_column_to_float(dataset, column):
     for row in dataset:
@@ -167,7 +183,6 @@ def str_column_to_float(dataset, column):
 
 time.sleep(40)
 featuresData = 'ml/features.csv'
-print(os.path.exists(featuresData))
 while (os.path.exists(featuresData) == False):
     time.sleep(5)
 
@@ -177,9 +192,10 @@ trainignData = load_csv(featuresData, trainignData)
 # fit model
 model = summarize_by_class(trainignData)
 
-#ssh_test()
+# ssh_test()
 
-ssh_connection()
+#ssh_connection()
+
 
 def getData():
     global ssh_connect
@@ -221,12 +237,15 @@ def getData():
 
             peaks = calculate_peak(buff)
 
-            #plot.plot(buff)
-            #plot.ylabel('Voltage')
-            #plot.show()
+            # plot.plot(buff)
+            # plot.ylabel('Voltage')
+            # plot.show()
 
             test = peaks.get('peak_heights')
-            incomingData = [test.min(), test.max(),test.shape[0]]
+            mean = np.mean(buff)
+            variance = np.var(buff)
+
+            incomingData = [test.min(), test.max(), test.shape[0], mean, variance]
 
             label = predict(model, incomingData)
             printLabel(label)
@@ -234,6 +253,22 @@ def getData():
         print("1 Unexpected error:", sys.exc_info()[0])
         ssh_connect = 0
         time.sleep(5)
-        #raise
+        # raise
 
-getData()
+
+#getData()
+
+def testWithNewCar():
+    incomingData = [0.0004278859935946539,6698.718038086023,5491.0]
+    label = predict(model, incomingData)
+    printLabel(label)
+
+    incomingData = [0.0005549715898419611,14344.106805246029,5265.0]
+    label = predict(model, incomingData)
+    printLabel(label)
+
+    incomingData = [0.00018525302757236092,68381.3413148204,4670.0]
+    label = predict(model, incomingData)
+    printLabel(label)
+
+testWithNewCar()

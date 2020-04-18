@@ -6,7 +6,7 @@ import matplotlib.pyplot as plot
 
 from peaks import calculate_peak
 
-with open('ml/human.csv', 'r') as file:
+with open('ml/car.csv', 'r') as file:
     csv_reader = reader(file)
     for row in csv_reader:
         if not row:
@@ -26,8 +26,8 @@ with open('ml/human.csv', 'r') as file:
         peaks = calculate_peak(buff)
         test = peaks.get('peak_heights')
         min=test.min()
-        rowtest = [test.min(), test.max(),test.shape[0], mean, variance]
+        rowtest = [test.min(), test.max(),test.shape[0]]
         #1 for wall
-        test = [2]
+        test = [3]
         writer = csv.writer(open("ml/features.csv", 'a'))
         writer.writerow(np.append(rowtest, test))

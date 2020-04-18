@@ -26,7 +26,7 @@ def fft_transform ():
          peaks = calculate_peak(buff)
          test = peaks.get('peak_heights')
          min = test.min()
-         rowtest = [test.min(), test.max(), test.shape[0], mean, variance]
+         rowtest = [test.min(), test.max(), test.shape[0]]
          # 3 for car
          test = [3]
          writer = csv.writer(open("ml/features.csv", 'a'))
