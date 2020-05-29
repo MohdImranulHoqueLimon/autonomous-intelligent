@@ -6,7 +6,7 @@ import matplotlib.pyplot as plot
 
 from peaks import calculate_peak
 
-with open('ml/car.csv', 'r') as file:
+with open('ml/human.csv', 'r') as file:
 
     csv_reader = reader(file)
     lineNumber = 0
@@ -17,21 +17,21 @@ with open('ml/car.csv', 'r') as file:
     for row in csv_reader:
 
         lineNumber = lineNumber + 1
-        plotNumber = plotNumber + 1
+        count = 0
 
-        if not row:
-            continue
+        if(lineNumber > 80):
+            if not row:
+                continue
 
-        buff = list(map(float, row))
+            count = count + 1
+            plotNumber = plotNumber + 1
+            buff = list(map(float, row))
 
-        plot.plot(buff)
-        plot.ylabel('Voltage  ' + str(lineNumber))
-        plot.show()
+            plot.plot(buff)
+            plot.ylabel('Voltage  Line: ' + str(lineNumber) + '  Plot: ' + str(plotNumber))
+            plot.show()
 
-        print(linestr + str(lineNumber))
-        print(plotstr + str(plotNumber))
-
-        if(lineNumber > 20):
-            break
+            print(linestr + str(lineNumber))
+            print(plotstr + str(plotNumber))
         
     print("complated!")
