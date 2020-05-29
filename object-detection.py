@@ -14,7 +14,7 @@ import numpy as np
 
 
 ssh_connect = 0
-waitingTime = 40
+waitingTime = 5
 
 def ssh_connection():
     global ssh_connect
@@ -37,13 +37,13 @@ def ssh_connection():
 def printLabel(label):
     if label == 1.0:
         print('Wall')
-        playMusic("/home/pi/autonomous-intelligent/wall.mp3")
+        playMusic("wall.mp3")
     if label == 2.0:
         print('Human')
-        playMusic("/home/pi/autonomous-intelligent/human.mp3")
+        playMusic("human.mp3")
     if label == 3.0:
         print('car')
-        playMusic("/home/pi/autonomous-intelligent/car.mp3")
+        playMusic("car.mp3")
 
 
 def playMusic(path):
@@ -220,7 +220,7 @@ def getData():
             mean = np.mean(buff)
             variance = np.var(buff)
 
-            incomingData = [test.min(), test.max(), test.shape[0], mean, variance]
+            incomingData = [test.min(), test.max(),mean, variance]
 
             label = predict(model, incomingData)
             printLabel(label)

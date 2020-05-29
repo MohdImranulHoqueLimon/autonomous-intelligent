@@ -1,4 +1,3 @@
-
 import threading
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
